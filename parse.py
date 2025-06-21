@@ -1,5 +1,12 @@
-from langchain_community.llms import Ollama
-from langchain_core.prompts import ChatPromptTemplate
+from groq import Groq
+import os
+from dotenv import load_dotenv
+
+# Loading environment variables
+load_dotenv()
+
+# Initializing Groq client
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 template = (
     "You are tasked with extracting specific information from the following text content: {dom_content}. "
@@ -10,20 +17,37 @@ template = (
     "4. **Direct Data Only:** Your output should contain only the data that is explicitly requested, with no other text."
 )
 
-model = Ollama(model="llama3")
-
-
-def parse_with_ollama(dom_chunks, parse_description):
-    prompt = ChatPromptTemplate.from_template(template)
-    chain = prompt | model
-
+def parse_with_groq(dom_chunks, parse_description):
     parsed_results = []
 
     for i, chunk in enumerate(dom_chunks, start=1):
-        response = chain.invoke(
-            {"dom_content": chunk, "parse_description": parse_description}
+        # Formating the prompt with actual content
+        formatted_prompt = template.format(
+            dom_content=chunk, 
+            parse_description=parse_description
         )
-        print(f"Parsed batch: {i} of {len(dom_chunks)}")
-        parsed_results.append(response)
+        
+        try:
+            response = client.chat.completions.create(
+                model="llama3-8b-8192",
+                messages=[
+                    {
+                        "role": "user",
+                        "content": formatted_prompt
+                    }
+                ],
+                temperature=0.1,  
+                max_tokens=1000,  
+                top_p=0.9
+            )
+            
+            result = response.choices[0].message.content
+            print(f"Parsed batch: {i} of {len(dom_chunks)}")
+            parsed_results.append(result)
+            
+        except Exception as e:
+            print(f"Error parsing batch {i}: {str(e)}")
+            parsed_results.append("") 
+            continue
 
     return "\n".join(parsed_results)
