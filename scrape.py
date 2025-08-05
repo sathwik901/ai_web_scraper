@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 def scrape_website(website):
     print("Connecting to Scraping Browser...")
 
-    selenium_url = "https://brd-customer-hl_56a4b396-zone-ai_scraper:4dm0kg5gl82l@brd.superproxy.io:9515"
+    selenium_url = "https://brd-customer-hl_7274484a-zone-scraping_browser1:80hh8yizz5hn@brd.superproxy.io:9515"
 
     options = ChromeOptions()
     options.add_argument("--no-sandbox")
